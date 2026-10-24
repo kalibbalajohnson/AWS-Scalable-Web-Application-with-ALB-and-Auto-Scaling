@@ -10,6 +10,8 @@ Amazon RDS Multi-AZ provides a highly available relational database across priva
 
 The architecture also uses an Internet Gateway to provide internet connectivity to the VPC and NAT Gateways to allow EC2 instances in private subnets to initiate outbound connections without being directly exposed to the internet.
 
+Security Groups provide resource-level traffic control, while Network Access Control Lists (NACLs) can provide an additional layer of subnet-level protection.
+
 The overall goal is to build a production-style AWS architecture that remains available, secure, and scalable during changes in traffic and infrastructure failures.
 
 ---
@@ -44,7 +46,7 @@ The objectives of this project are to:
 - Distribute application traffic using an Application Load Balancer.
 - Automatically scale EC2 instances using an Auto Scaling Group.
 - Deploy an Amazon RDS Multi-AZ database.
-- Improve application security using AWS WAF and Security Groups.
+- Improve application security using AWS WAF, Security Groups, and Network ACLs.
 - Improve content delivery using Amazon CloudFront.
 - Configure DNS using Amazon Route 53.
 - Control access using AWS Identity and Access Management (IAM).
@@ -85,6 +87,9 @@ The NAT Gateways are used for outbound connectivity and are not part of the inbo
 | Public Subnets | Contain the internet-facing ALB and NAT Gateways |
 | Private App Subnets | Contain EC2 application instances |
 | Private DB Subnets | Contain the Amazon RDS database |
+| Route Tables | Control how traffic is routed within and outside the VPC |
+| Network ACLs | Provide subnet-level network traffic control |
+| Security Groups | Provide resource-level traffic control |
 | NAT Gateway | Provides outbound internet connectivity for EC2 instances in private subnets |
 | Amazon EC2 | Hosts the web application |
 | Auto Scaling Group | Automatically adjusts EC2 capacity |
@@ -255,15 +260,13 @@ When users access the application's domain name, Route 53 resolves the domain an
 
 ### 13. AWS Identity and Access Management
 
-AWS Identity and Access Management (IAM) controlsies can be used to grant AWS services and administrators only the permissions required to perform their tasks.
+AWS Identity and Access Management (IAM) policies can be used to grant AWS services and administrators only the permissions required to perform their tasks.
 
 ---
 
 ### 14. AWS Systems Manager
 
-AWS Systems Manager Session Manager provides secure administrative access to EC2 instances.
-
-This allows administrators to manage EC2 instances without exposing them directly to the internet or maintaining a traditional bastion host.
+AWS Systems Manager Session Manager provides secure administrative access to EC2 instancesstances without exposing them directly to the internet or maintaining a traditional bastion host.
 
 ---
 
@@ -326,7 +329,7 @@ A normal user request follows this path:
 2. Amazon Route 53 resolves the application's domain.
 3. The request is delivered through Amazon CloudFront.
 4. AWS WAF checks the request against configured security rules.
-5. The request reaches the VPC through the internet-facing infrastructure.
+5. The request reaches the internet-facing Application Load Balancer.
 6. The Application Load Balancer receives the request.
 7. The ALB selects a healthy EC2 instance from its target group.
 8. The EC2 instance processes the application request.
@@ -399,35 +402,15 @@ The architecture applies security at multiple layers.
 
 ### Network Security
 
-EC2 instances and Amazon RDS are deployed inside private subnets.
+EC2 instances and Amazon RDS are deployed inside private subnets, preventing them from being directly exposed to the internet.
 
-This prevents users on the internet from directly connecting to these resources.
+Network ACLs (NACLs) can provide additional subnet-level protection by controlling inbound and outbound traffic for the public and private subnets.
 
 ### Security Groups
 
-Security Groups restrict communication between different layers of the application.
+Security Groups provide resource-level traffic control. The ALB Security Group controls traffic reaching the load balancer, the EC2 Security Group restricts application traffic to the ALB, and the RDS Security Group restricts database access to the application layer.
 
-The intended application path is:
-
-```text
-Users
-  ↓
-Route 53
-  ↓
-CloudFront
-  ↓
-AWS WAF
-  ↓
-Application Load Balancer
-  ↓
-EC2 Instances
-  ↓
-Amazon RDS
-```
-
-The EC2 Security Group should allow required application traffic from the Application Load Balancer rather than directly from the internet.
-
-The RDS Security Group should allow database traffic from the application layer rather than directly from the internet.
+Security Groups are stateful, while Network ACLs are stateless and operate at the subnet level. Both can be used together to provide layered network security.
 
 ### AWS WAF
 
@@ -497,6 +480,8 @@ The completed architecture demonstrates practical understanding of:
 - Public and private subnets
 - Internet Gateway
 - Route tables
+- Network ACLs
+- Security Groups
 - NAT Gateways
 - Application Load Balancer
 - ALB health checks
@@ -522,6 +507,7 @@ The project covers:
 - Designing a VPC with public and private subnets.
 - Configuring public and private route tables.
 - Understanding the different roles of Internet Gateways and NAT Gateways.
+- Using Security Groups and Network ACLs for layered network security.
 - Building a highly available multi-AZ architecture.
 - Configuring load balancing and health checks.
 - Implementing EC2 Auto Scaling.
@@ -541,7 +527,9 @@ This project demonstrates how a web application can be deployed on AWS using a s
 
 The Application Load Balancer distributes incoming application requests across EC2 instances running in private application subnets, while the Auto Scaling Group manages application capacity across two Availability Zones.
 
-Amazon RDS Multi-AZ provides a highly available database layer in private database subnets. The Internet Gateway provides connectivity between the VPC and the internet-facing infrastructure, while NAT Gateways provide controlled outbound internet connectivity for EC2 instances located in private application subnets.
+Amazon RDS Multi-AZ provides a highly available database layer in private database subnets. The Internet Gateway provides internet connectivity for resources using public routes, while NAT Gateways provide controlled outbound internet connectivity for EC2 instances located in private application subnets.
+
+Security Groups control traffic at the resource level, while Network ACLs can provide additional subnet-level network protection.
 
 CloudFront, AWS WAF, Route 53, IAM, Systems Manager, CloudWatch, and SNS provide supporting content delivery, security, DNS, access control, administration, monitoring, and notification capabilities.
 
