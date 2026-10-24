@@ -1,4 +1,4 @@
-# Scalable Web Application with ALB and Auto Scaling
+# AWS Scalable Web Application with ALB and Auto Scaling
 
 ## Project Overview
 
