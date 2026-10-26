@@ -110,7 +110,7 @@ The NAT Gateways are used for outbound connectivity and are not part of the inbo
 
 ### Architecture Diagram
 
-![AWS Scalable Web Application Architecture](architecture/architecture-diagram2.png)
+![AWS Scalable Web Application Architecture](architecture/architecture-diagram.png)
 
 ---
 
